@@ -18,6 +18,7 @@
 
 package org.apache.synapse.transport.passthru.jmx;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -200,6 +201,10 @@ public class LatencyParameter {
         return getAverageLatencyByMinute(1);
     }
 
+    public double get99PerLatency1m() {
+        return get99PerLatencyByMinute(1);
+    }
+
     public double getAverageLatency24h() {
         return getAverageLatencyByHour(24);
     }
@@ -241,6 +246,44 @@ public class LatencyParameter {
             return 0.0;
         }
         return sum / samples;
+    }
+
+    private double get99PerLatencyByMinute(int n) {
+        if (!enabled) {
+            return 0.0;
+        }
+        int samples = n * SAMPLES_PER_MINUTE;
+        double percentile = 0.0;
+        Long[] array;
+        synchronized (shortTermCacheLock) {
+            array = shortTermCache.toArray(new Long[shortTermCache.size()]);
+        }
+
+        if (array.length == 0) {
+            return 0.0;
+        }
+
+        if (samples > array.length) {
+            // If we don't have enough samples collected yet
+            // add up everything we have
+            samples = array.length;
+            Arrays.sort(array);
+            int index = (int)Math.ceil((99.0 / 100) * array.length);
+            percentile = array[index-1];
+
+        } else {
+            // We have enough samples to make the right calculation
+            // Get the values starting from the end of the queue (to give the most recent values)
+            Long[] recentValuesArray=Arrays.copyOfRange(array,array.length-samples,array.length);
+            Arrays.sort(recentValuesArray);
+            int index = (int)Math.ceil((99.0 / 100) * recentValuesArray.length);
+            percentile = recentValuesArray[index-1];
+        }
+
+        if (samples == 0) {
+            return 0.0;
+        }
+        return percentile;
     }
 
     private double getAverageLatencyByHour(int n) {

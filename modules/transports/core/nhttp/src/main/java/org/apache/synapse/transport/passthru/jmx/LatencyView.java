@@ -294,6 +294,10 @@ public class LatencyView implements LatencyViewMBean {
         return lastLatency.getAverageLatency1m();
     }
 
+    public double get1m_99Per_Latency() {
+        return lastLatency.get99PerLatency1m();
+    }
+
     public double get5m_Avg_Latency() {
         return lastLatency.getAverageLatency5m();
     }

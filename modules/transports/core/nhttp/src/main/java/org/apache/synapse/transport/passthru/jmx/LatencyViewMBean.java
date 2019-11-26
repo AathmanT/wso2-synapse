@@ -40,6 +40,7 @@ public interface LatencyViewMBean {
 
     /** 1m averages */
     public double get1m_Avg_Latency();
+    public double get1m_99Per_Latency();
     public double get1m_Avg_Latency_BackEnd();
     public double get1m_Avg_Client_To_Esb_RequestReadTime();
     public double get1m_Avg_Esb_To_BackEnd_RequestWriteTime();
