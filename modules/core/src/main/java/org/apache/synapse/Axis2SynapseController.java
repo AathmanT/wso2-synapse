@@ -58,7 +58,14 @@ import org.apache.synapse.util.xpath.ext.SynapseXpathFunctionContextProvider;
 import org.apache.synapse.util.xpath.ext.SynapseXpathVariableResolver;
 import org.apache.synapse.util.xpath.ext.XpathExtensionUtil;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.rmi.registry.LocateRegistry;
 import java.util.*;
 
 /**
@@ -397,6 +404,26 @@ public class Axis2SynapseController implements SynapseController {
 
         synapseEnvironment = new Axis2SynapseEnvironment(
                 configurationContext, synapseConfiguration, serverContextInformation);
+
+        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+
+        ObjectName objectName = null;
+        try {
+            objectName = new ObjectName("com.ei.autotuning-Axis2SynapseController:type=basic,name=dynamicTuning");
+            server.registerMBean(synapseEnvironment,objectName);
+
+            LocateRegistry.createRegistry(3346);
+            JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://localhost/jndi/rmi://localhost:3346/jmxrmi");
+            JMXConnectorServer svr = JMXConnectorServerFactory.newJMXConnectorServer(url, null, server);
+            svr.start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+
         MessageContextCreatorForAxis2.setSynEnv(synapseEnvironment);
 
         Parameter synapseEnvironmentParameter = new Parameter(

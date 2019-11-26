@@ -32,6 +32,14 @@ import org.apache.synapse.transport.passthru.PassThroughConstants;
 import org.apache.synapse.transport.passthru.jmx.PassThroughTransportMetricsCollector;
 import org.apache.synapse.transport.passthru.util.BufferFactory;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
+import java.lang.management.ManagementFactory;
+import java.rmi.registry.LocateRegistry;
+
 /**
  * This class has common configurations for both sender and receiver.
  */
@@ -87,6 +95,23 @@ public abstract class BaseConfiguration {
                             conf.getWorkerPoolQueueLen(),
                             PASSTHROUGH_THREAD_GROUP,
                             PASSTHROUGH_THREAD_ID);
+
+            MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+
+            ObjectName objectName = null;
+            try {
+                objectName = new ObjectName("com.ei.autotuningBaseConf:type=basic,name=dynamicTuning");
+                server.registerMBean(workerPool,objectName);
+
+                LocateRegistry.createRegistry(3345);
+                JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://localhost/jndi/rmi://localhost:3345/jmxrmi");
+                JMXConnectorServer svr = JMXConnectorServerFactory.newJMXConnectorServer(url, null, server);
+                svr.start();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
 
         httpParams = buildHttpParams();

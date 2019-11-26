@@ -79,11 +79,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is the Axis2 implementation of the SynapseEnvironment
  */
-public class Axis2SynapseEnvironment implements SynapseEnvironment {
+public class Axis2SynapseEnvironment implements SynapseEnvironment,Axis2SynapseEnvironmentMBean {
 
     private static final Log log = LogFactory.getLog(Axis2SynapseEnvironment.class);
     private static final Log trace = LogFactory.getLog(SynapseConstants.TRACE_LOGGER);
@@ -1177,4 +1179,35 @@ public class Axis2SynapseEnvironment implements SynapseEnvironment {
     public void setUnitTestEnabled(boolean isUnitTestEnabled) {
         this.isUnitTestEnabled = isUnitTestEnabled;
     }
+
+    @Override
+    public void setCoreThreadPoolSize(int size) {
+        ((ThreadPoolExecutor)this.executorService).setCorePoolSize(size);
+    }
+
+    @Override
+    public void setMaxThreadPoolSize(int size) {
+        ((ThreadPoolExecutor)this.executorService).setMaximumPoolSize(size);
+    }
+
+    @Override
+    public void setKeepAliveTime(long time) {
+        ((ThreadPoolExecutor)this.executorService).setKeepAliveTime(time, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public int getCoreThreadPoolSize() {
+        return ((ThreadPoolExecutor)this.executorService).getCorePoolSize();
+    }
+
+    @Override
+    public int getMaxThreadPoolSize() {
+        return ((ThreadPoolExecutor)this.executorService).getMaximumPoolSize();
+    }
+
+    @Override
+    public long getKeepAliveTime() {
+        return ((ThreadPoolExecutor)this.executorService).getKeepAliveTime(TimeUnit.SECONDS);
+    }
+
 }

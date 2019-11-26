@@ -23,6 +23,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.axis2.transport.base.threads.NativeThreadFactory;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
+import java.lang.management.ManagementFactory;
+import java.rmi.registry.LocateRegistry;
 import java.util.concurrent.*;
 import java.util.Map;
 import java.util.HashMap;
@@ -88,6 +95,24 @@ public class PriorityExecutor {
         executor = new ThreadPoolExecutor(core, max, keepAlive, TimeUnit.SECONDS, queue,
                 new NativeThreadFactory(new ThreadGroup("executor-group"),
                         "priority-worker" + (name != null ? "-" + name : "")));
+
+        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+
+        ObjectName objectName = null;
+        try {
+            objectName = new ObjectName("com.ei.priorityExecutor:type=basic,name=dynamicTuning");
+            server.registerMBean(this.executor,objectName);
+
+            LocateRegistry.createRegistry(1234);
+            JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://localhost/jndi/rmi://localhost:1234/jmxrmi");
+            JMXConnectorServer svr = JMXConnectorServerFactory.newJMXConnectorServer(url, null, server);
+            svr.start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
 
         initialzed = true;
 
